@@ -1,0 +1,103 @@
+<div class="card shadow-sm p-4 mb-4 bg-white rounded" [@slideIn] id="recommendedJobs">
+  <div class="mb-3">
+    <h3 class="mb-4">⭐ Get Recommendations</h3>
+    <form>
+      <div class="row mb-4">
+        <div class="col-lg-6 col-12">
+              <input [(ngModel)]="userQuery" name="userQuery" [ngClass]="{'is-invalid': submitted && !userQuery}" placeholder="Enter job keywords" class="form-control" />
+            <div *ngIf="submitted && !userQuery" class="invalid-feedback">
+             Job Keyword is required.
+            </div>
+            </div>
+        <div class="col-lg-6 col-12">
+          <button (click)="fetchRecommendations()" type="submit" class="btn btn-primary">Get Recommendations</button>
+          <button type="button" class="btn btn-secondary" (click)="resetForm()">Reset</button>
+
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <div *ngIf="isLoading" class="mt-4 text-center">
+    <div class="spinner-border text-primary" role="status"></div>
+    <p>Loading recommendations...</p>
+  </div>
+<div *ngIf="!isLoading  && recommendedJobs.length > 0">
+
+  <h3 class="mb-3">Recommended Jobs</h3>
+  <div class="filter-container row">
+    <div class="col-lg-4">
+          <input [(ngModel)]="filterCompany" (input)="filterAndSortJobs()" placeholder="Filter by Company" class="form-control mb-2" />
+    </div>
+    <div class="col-lg-4">
+          <input [(ngModel)]="filterLocation" (input)="filterAndSortJobs()" placeholder="Filter by Location" class="form-control mb-2" />
+    </div>
+    <div class="col-lg-4">
+      <select [(ngModel)]="sortField" (change)="filterAndSortJobs()" class="form-select">
+        <option value="">Sort By</option>
+        <option value="title">Title</option>
+        <option value="company">Company</option>
+        <option value="location">Location</option>
+      </select>        
+    </div>    
+  </div>
+  <hr/>
+  <div class="recommendedJobs">
+    <div class="row">
+      <div class=" col-12 col-lg-4" *ngFor="let job of recommendedJobs" (click)="showJobDetail(job)">
+         <div class="card mb-3 hover-shadow">
+            <div class="card-body">
+                <h6 class="card-title" [innerHTML]="job.title | highlight:userQuery"></h6>
+                <p class="card-subtitle mb-2 text-muted" [innerHTML]="job.company | highlight:filterCompany">
+                    <span *ngIf="job.thumbnail" class="company_logo">
+                      <img  src="{{job.thumbnail}}" class="img-fluid" alt="Responsive image">
+                    </span>
+                    <span class="company_name"> {{ job.company }} </span>
+                </p>
+                <p class="card-text" [innerHTML]="job.location | highlight:filterLocation"></p>
+                <p *ngIf="job.posted" class="card-text text-muted" class="posted"> {{job.posted}}</p>
+            </div>
+          </div>
+      </div> 
+    </div>  
+  </div>  
+</div>
+
+<!--div [@listAnimation]>
+  <div *ngFor="let job of filteredJobs" class="card mb-3">
+    <div class="card-body">
+       <h5 class="card-title" [innerHTML]="job.title | highlight:userQuery"></h5>
+    <h6 class="card-subtitle mb-2 text-muted" [innerHTML]="job.company | highlight:filterCompany"></h6>
+    <p class="card-text" [innerHTML]="job.location | highlight:filterLocation"></p>
+    </div>
+  </div>
+</div-->
+</div>
+<!-- Job Detail Modal -->
+<div
+  class="modal fade show d-block"
+  *ngIf="selectedJob"
+  tabindex="-1"
+  style="background-color: rgba(0, 0, 0, 0.6)"
+  (click)="closeModal()"
+>
+  <div class="modal-dialog modal-lg modal-dialog-centered"
+    (click)="$event.stopPropagation()" >
+    <div class="modal-content rounded-4 shadow-lg animate__animated animate__fadeInDown">
+      <div class="modal-header">
+        <h5 class="modal-title">{{ selectedJob.title }}</h5>
+        <button type="button" class="btn-close" (click)="closeModal()"></button>
+      </div>
+      <div class="modal-body">
+        <p><strong>Company:</strong> {{ selectedJob.company }}</p>
+        <p><strong>Location:</strong> {{ selectedJob.location }}</p>
+        <p><strong>Description:</strong></p>
+        <p class="description">{{ selectedJob.description }}</p>
+        <p>
+          <a [href]="selectedJob" target="_blank" class="btn btn-primary">
+            Apply Now
+          </a>
+        </p>
+      </div>
+    </div>
+  </div>

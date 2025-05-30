@@ -1,0 +1,20 @@
+<div class="row">
+  <div class="col-lg-6 mb-4">
+    <h5>Jobs by Location</h5>
+    <canvas 
+        baseChart
+      [data]="locationChartData"
+      [type]="locationChartType"
+      [options]="chartOptions">
+    </canvas>
+    </div>
+    <div class="col-lg-6 mb-4">
+     <h5>Jobs by Days Age</h5>
+    <canvas 
+        baseChart
+      [data]="postedDaysChartData"
+      [type]="postedDaysChartType"
+      [options]="barChartOptions">
+    </canvas>
+  </div> 
+</div>

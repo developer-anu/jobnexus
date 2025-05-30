@@ -1,0 +1,23 @@
+.description{
+    height:150px;
+    overflow-y: scroll;
+}
+.recommendedJobs{
+    height:400px;
+    padding: 1rem;
+    overflow-y: scroll;
+     .card{
+        box-shadow: 0 0 2px lightgray;
+        border:3px solid lightgrey;
+        cursor: pointer;
+        min-height: 160px;
+        &:hover{
+            box-shadow: 0 0 13px lightgray;
+        }
+    }
+}
+form{
+   .btn-primary{
+        margin-right: 20px;
+    }
+}

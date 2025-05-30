@@ -1,0 +1,11 @@
+<app-header></app-header>
+
+ <div class="container py-4">
+  <app-job-search (searchJobs)="handleSearch($event)"></app-job-search>
+  <app-user-preferences></app-user-preferences>
+  <app-job-list [jobs]="jobs"></app-job-list>
+  <app-job-detail [job]="selectedJob"></app-job-detail>
+  <app-job-recommendation></app-job-recommendation>
+</div>
+
+<app-footer></app-footer>

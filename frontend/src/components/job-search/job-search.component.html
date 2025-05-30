@@ -1,0 +1,230 @@
+<div class="card shadow-sm p-4 mb-4 bg-white rounded" [@slideIn] id="searchJobs">
+  <h4 class="mb-3 text-primary">🔍 Search for Jobs</h4>
+
+  <form class="d-flex align-items-center row"  (ngSubmit)="onSearch()" >
+    <div class="col-lg-4">
+      <label class="form-label">Keyword  
+         <span 
+          tabindex="0" 
+          data-bs-toggle="tooltip" 
+          data-bs-placement="right" 
+          title="Enter a keyword like AI Engineer search for relevant jobs.">
+
+         <i class="bi bi-question-circle" style="font-size: 1.2rem; cursor: pointer;"></i>
+         </span>
+      </label>
+      <input type="text" [ngClass]="{'is-invalid': submitted && !keyword}" placeholder="Enter Keyword "  class="form-control" [(ngModel)]="keyword" name="keyword" />
+      <div *ngIf="submitted && !keyword" class="invalid-feedback">
+        Keyword is required.
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <label class="form-label">Location 
+         <span 
+          tabindex="1" 
+          data-bs-toggle="tooltip" 
+          data-bs-placement="right" 
+          title="Enter a location like India search for relevant jobs.">
+
+         <i class="bi bi-question-circle" style="font-size: 1.2rem; cursor: pointer;"></i>
+         </span>
+      </label>
+      <input type="text" class="form-control" placeholder="Enter Location"  [ngClass]="{'is-invalid': submitted && !location}"  [(ngModel)]="location" name="location" />
+       <div *ngIf="submitted && !location" class="invalid-feedback">
+        Location is required.
+      </div>
+    </div>
+    <div class="col-lg-4">
+      <button type="submit" class="btn btn-primary">Search</button>
+      <button type="button" class="btn btn-secondary" (click)="resetForm()">Reset</button>
+    </div>
+    
+  </form>
+
+ 
+
+  <div *ngIf="isLoading" class="mt-4 text-center">
+    <div class="spinner-border text-primary" role="status"></div>
+    <p>Searching jobs...</p>
+  </div>
+
+  <div class="container mt-4">
+    <div *ngIf="submitted && jobs.length === 0 && location && keyword && !isLoading">No Jobs found. Try searching with some other <b>keyword</b></div>
+
+    <div *ngIf="submitted && jobs.length > 0 && !isLoading">
+       <hr />
+      <div class="row">
+        <!-- Left Column: Job Cards -->
+        <div class="col-lg-5 col-12">
+          <div class="row">
+            <h5 class="mb-1">Search Results</h5>
+          </div>
+           <div class="row search-job-container">
+            <div class="col-12 col-md-12 col-lg-12 mb-3" *ngFor="let job of jobs" (click)="showJobDetail(job)" style="cursor: pointer;">
+              <div class="card hover-shadow h-100">
+                <div class="card-body">
+                  <h6 class="card-title mb-3">{{ job.title }}</h6>
+                  <p class="card-text text-muted">
+                    <span *ngIf="job.thumbnail" class="company_logo">
+                      <img  src="{{job.thumbnail}}" class="img-fluid" alt="Responsive image">
+                    </span>
+                    <span class="company_name"> {{ job.company }} </span>
+                  </p>
+                  <p class="card-text text-muted" class="location"> {{ job.location }}</p>
+                  <p *ngIf="job.posted" class="card-text text-muted" class="posted"> {{job.posted}}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Right Column: Pie Chart -->
+        <div class="col-lg-7 d-flex align-items-top">
+          <app-job-chart [jobData]="jobs"></app-job-chart>
+        </div>
+        
+      </div>
+
+      <!-- Job Detail Modal -->
+      <div
+        class="modal fade show d-block"
+        *ngIf="selectedJob"
+        tabindex="-1"
+        style="background-color: rgba(0, 0, 0, 0.5);"
+        (click)="closeModal()"
+      >
+        <div class="modal-dialog modal-lg modal-dialog-centered" (click)="$event.stopPropagation()">
+          <div class="modal-content rounded-4 shadow-lg animate__animated animate__fadeInDown">
+            <div class="modal-header bg-primary text-white">
+              <h5 class="modal-title">
+                {{ selectedJob.title }}  {{ selectedJob.company }}
+              </h5>
+              <button
+                type="button"
+                class="btn-close btn-close-white"
+                aria-label="Close"
+                (click)="closeModal()"
+              ></button>
+            </div>
+            <div class="modal-body">
+              <p><strong>Location:</strong> {{ selectedJob.location }}</p>
+              <hr />
+              <div>
+                <h6>Description</h6>
+                <p [innerHTML]="selectedJob.description" class="description"></p>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <a
+                [href]="selectedJob.apply_link"
+                target="_blank"
+                class="btn btn-success"
+                rel="noopener noreferrer"
+              >
+                Apply Now
+              </a>
+              <button type="button" class="btn btn-secondary" (click)="closeModal()">
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+<!--div class="card shadow-sm p-4 mb-4 bg-white rounded" [@slideIn]>
+  <h4 class="mb-3 text-primary">🔍 Search for Jobs</h4>
+
+   <form (ngSubmit)="onSearch()">
+    <div class="mb-3">
+      <label class="form-label">Keyword</label>
+      <input type="text" class="form-control" [(ngModel)]="keyword" name="keyword" />
+    </div>
+
+  <div class="mb-3">
+    <label class="form-label">Location</label>
+    <input type="text" class="form-control" [(ngModel)]="location" name="location" />
+  </div>
+
+  <button type="submit" class="btn btn-primary">Search</button>
+   </form>
+
+    <hr />
+
+    <div *ngIf="isLoading" class="mt-4 text-center">
+    <div class="spinner-border text-primary" role="status"></div>
+    <p>Searching jobs...</p>
+    </div>
+
+   <div class="container mt-4">
+    
+        <div *ngIf="!isLoading && jobs.length === 0">No jobs found.</div>
+        <div *ngIf="!isLoading && jobs.length > 0">
+          <div class="row">
+            <div class="col-12 col-lg-4"  *ngFor="let job of jobs" (click)="showJobDetail(job)">
+              <div class="card mb-3 hover-shadow">
+                <div class="card-body">
+                  <h5 class="card-title">{{ job.title }}</h5>
+                  <p class="card-text text-muted">{{ job.company }} • {{ job.location }}</p>
+                </div>
+              </div>
+            </div>     
+          </div>  
+          <div
+            class="modal fade show d-block"
+            *ngIf="selectedJob"
+            tabindex="-1"
+            style="background-color: rgba(0, 0, 0, 0.5);"
+            (click)="closeModal()"
+          >
+            <div
+              class="modal-dialog modal-lg modal-dialog-centered"
+              (click)="$event.stopPropagation()"
+            >
+              <div class="modal-content rounded-4 shadow-lg animate__animated animate__fadeInDown">
+                <div class="modal-header bg-primary text-white">
+                  <h5 class="modal-title">
+                    {{ selectedJob.title }}  {{ selectedJob.company }}
+                  </h5>
+                  <button
+                    type="button"
+                    class="btn-close btn-close-white"
+                    aria-label="Close"
+                    (click)="closeModal()"
+                  ></button>
+                </div>
+                <div class="modal-body">
+                  <p><strong>Location:</strong> {{ selectedJob.location }}</p>
+                  <hr />
+                  <div>
+                    <h6>Description</h6>
+                    <p [innerHTML]="selectedJob.description" class="description"></p>
+                  </div>        
+                </div>
+                <div class="modal-footer">
+                  <a
+                    [href]="selectedJob.apply_link"
+                    target="_blank"
+                    class="btn btn-success"
+                    rel="noopener noreferrer"
+                  >
+                    Apply Now
+                  </a>
+                  <button type="button" class="btn btn-secondary" (click)="closeModal()">
+                    Close
+                  </button>
+                </div>
+              </div>
+          </div>
+        </div>
+    </div>
+    <div *ngIf="!isLoading && jobs.length > 0">
+      <app-job-chart [jobData]="jobs"></app-job-chart>
+    </div>    
+  </div>
+</div-->
