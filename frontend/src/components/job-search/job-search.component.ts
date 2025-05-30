@@ -31,6 +31,7 @@ export class JobSearchComponent implements AfterViewInit{
   keyword: string = '';
   location: string = '';
   jobs: any[] = [];
+  storeJobs:any[] = [];
   isLoading = false;
   query = '';
   selectedJob: Job | null = null;
@@ -67,7 +68,7 @@ export class JobSearchComponent implements AfterViewInit{
     }
     return chunks;
   }  
-  onSearch(): void {
+/*  onSearch(): void {
   this.submitted = true;
   if (!this.keyword || !this.location) {
     return;
@@ -120,7 +121,107 @@ export class JobSearchComponent implements AfterViewInit{
       this.keyword = '';
       this.location = '';
       this.submitted = false;
+    }*/
+
+      onSearch(): void {
+    this.submitted = true;
+    if (!this.keyword || !this.location) {
+      return;
     }
+
+    this.isLoading = true;
+    this.jobs = [];
+
+    // Step 1: Search Pinecone for similar embeddings
+    this.jobService.searchPinecone(this.keyword, this.location).subscribe({
+      next: (pineconeResults: any[]) => {
+        if (pineconeResults && pineconeResults.length > 0) {
+          this.processJobs(pineconeResults);
+          this.isLoading = false;
+        } else {
+          // Step 2: No results from Pinecone, fallback to Serapi
+          this.jobService.searchSerapi(this.keyword, this.location).subscribe({
+            next: (serapiResults: any[]) => {
+              this.processJobs(serapiResults);
+              this.isLoading = false;
+            },
+            error: (err) => {
+              console.error('Serapi fetch error:', err);
+              this.isLoading = false;
+            }
+          });
+        }
+      },
+      error: (err) => {
+        console.error('Pinecone search error:', err);
+        // Fallback to Serapi on Pinecone error
+        this.jobService.searchSerapi(this.keyword, this.location).subscribe({
+          next: (serapiResults: any[]) => {
+            this.processJobs(serapiResults);
+            this.isLoading = false;
+          },
+          error: (serapiErr) => {
+            console.error('Serapi fetch error:', serapiErr);
+            this.isLoading = false;
+          }
+        });
+      }
+    });
+  }
+
+  private processJobs(rawJobs: any[]) {
+    if (!rawJobs || rawJobs.length === 0) {
+      console.warn('No jobs found.');
+      this.jobs = [];
+      return;
+    }
+
+    const jobs = rawJobs.map(job => ({
+      id: uuidv4(),
+      title: job.title ?? "",
+      company: job.company ?? "",
+      location: job.location ?? "",
+      description: job.description ?? "",
+      apply_link: job.apply_link ?? "",
+      thumbnail: job.thumbnail ?? "",
+      posted: job.posted ?? "",
+      via: job.via ?? "",
+      postedDays: this.extractPostedDays(job.posted ?? "")
+    }));
+    const storeJobs = rawJobs.map(job => ({
+      id: uuidv4(),
+      title: job.title ?? "",
+      company: job.company ?? "",
+      location: job.location ?? "",
+      description: job.description ?? "",
+      apply_link: job.apply_link ?? "",
+      thumbnail: job.thumbnail ?? "",
+      posted: job.posted ?? "",
+      via: job.via ?? ""
+    }));
+    
+    // Sort jobs by postedDays ascending (newest first)
+    this.jobs = jobs.sort((a, b) => a.postedDays - b.postedDays);
+    this.storeJobs = storeJobs;
+    // Store jobs in backend or local storage
+    console.log(this.storeJobs);
+    this.jobService.storeJobs(this.storeJobs).subscribe({
+      next: () => console.log('Jobs stored successfully'),
+      error: err => console.error('Store failed:', err)
+    });
+  }
+
+  showJobDetail(job: Job): void {
+    this.selectedJob = job;
+  }
+
+  resetForm() {
+    this.keyword = '';
+    this.location = '';
+    this.submitted = false;
+    this.jobs = [];
+  }
+
   closeModal(): void {
     this.selectedJob = null;
   }

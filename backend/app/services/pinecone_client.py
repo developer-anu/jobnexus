@@ -30,12 +30,37 @@ if INDEX_NAME not in pc.list_indexes().names():
 # Get a reference to the index
 index = pc.Index(INDEX_NAME)
 
+def normalize_job_fields(job: dict) -> dict:
+    """
+    Normalize job dict to ensure all required fields exist with default empty strings.
+    """
+    required_fields = [
+        "id",
+        "title",
+        "company",
+        "location",
+        "description",
+        "apply_link",
+        "thumbnail",
+        "posted",
+        "via"
+    ]
+    normalized_job = {}
+    for field in required_fields:
+        value = job.get(field)
+        if value is None:
+            normalized_job[field] = ""  # Replace None with empty string
+        else:
+            normalized_job[field] = value
+    return normalized_job
+
+
 def generate_id(job):
     # You can modify this function to include more fields if needed
     identifier = f"{job['title']}_{job['company']}_{job['location']}"
     return hashlib.md5(identifier.encode()).hexdigest()
 
-def upsert_jobs_to_pinecone_check_duplicates(jobs: list[dict]):
+'''def upsert_jobs_to_pinecone_check_duplicates(jobs: list[dict]):
     vectors = []
     inserted = 0
 
@@ -74,17 +99,64 @@ def upsert_jobs_to_pinecone_check_duplicates(jobs: list[dict]):
     else:
         print("⚠️ No new jobs to upsert.")
     return {"message": f"{inserted} new jobs added to Pinecone."}
+'''
+
+def upsert_jobs_to_pinecone_check_duplicates(jobs: list[dict]):
+    vectors = []
+    inserted = 0
+
+    for job in jobs:
+        job = normalize_job_fields(job)  # Normalize fields here
+
+  # Defensive check: skip jobs without title or company
+        if not job['title'] or not job['company']:
+            print("Skipping job due to missing title or company:", job)
+            continue
+        vector_id = generate_id(job)
+
+        existing = index.fetch(ids=[vector_id])
+
+        if vector_id in existing.vectors:
+            print(f"Job with ID {vector_id} already exists. Skipping.")
+            continue
+
+        job_metadata = {
+            "title": job["title"],
+            "company": job["company"],
+            "description": job["description"],
+            "location": job["location"],
+            "apply_link": job["apply_link"],
+            "thumbnail": job["thumbnail"],
+            "posted": job["posted"],
+            "via": job["via"]
+        }
+
+        job_text = f"{job.get('title')} {job['company']} {job['description']}"
+        embedding = get_embedding(job_text)
+
+        vectors.append((vector_id, embedding, job_metadata))
+        inserted += 1
+
+    if vectors:
+        index.upsert(vectors)
+        print(f"✅ {inserted} new jobs upserted successfully.")
+    else:
+        print("⚠️ No new jobs to upsert.")
+    return {"message": f"{inserted} new jobs added to Pinecone."}
 
 
 def upsert_jobs_to_pinecone(jobs: list[dict]):
     vectors = []
     for job in jobs:
+        job = normalize_job_fields(job)  # Normalize here
+
         job_id = job["id"]
-        text_to_embed = job["title"] + " " + job["description"] + " " + job["company"] + " " + job["location"]
+        text_to_embed = f"{job['title']} {job['description']} {job['company']} {job['location']}"
         embedding = get_embedding(text_to_embed)
         vectors.append((job_id, embedding, job))
     index.upsert(vectors)
     return {"message": f"{len(vectors)} jobs upserted successfully"}
+
 
 
 def query_jobs_from_pinecone(query: str, top_k: int = 10) -> list[dict]:
